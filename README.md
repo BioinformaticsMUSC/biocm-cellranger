@@ -14,7 +14,7 @@ For a batch job, use the following code:
 ```
 cd /zfs/musc3/singularity_images
 
-singularity exec -B /scratch1/bryangranger/project_directory/cellranger_run_outputs:/mnt --pwd /mnt biocm-cellranger_latest.sif cellranger count \
+singularity exec -B /zfs/musc3:/mnt --pwd /mnt/project_directory/output_directory biocm-cellranger_latest.sif cellranger count \
    --id=run_count_1kpbmcs \
    --fastqs=/mnt/home/user.name/yard/run_cellranger_count/pbmc_1k_v3_fastqs \
    --sample=pbmc_1k_v3 \
@@ -25,7 +25,7 @@ Note the following options:
 
 Note that if you are accessing FASTQ files and library CSV files, they need to be located within the source directory above so that they can be accessed within the container. The outputs must also be saved within the `/mnt` directory for it to be saved outside the container.
 
-- `--pwd /mnt`: this sets the working directory inside the container to `/mnt`, which is the mounted volume linked to the source directory.
+- `--pwd /mnt`: this sets the working directory inside the container to `/mnt/project_directory/output_directory`, which is the mounted volume linked to the source directory.
 
 It is not necessary to add any modules.
 
