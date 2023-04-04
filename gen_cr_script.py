@@ -1,4 +1,4 @@
-#!/opt/cellranger-7.1.0/external/anaconda/bin/python
+#!/usr/bin/env python
 def main(args):
 
     if not args.count and not args.multi:
