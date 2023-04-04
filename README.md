@@ -61,8 +61,18 @@ Use the command `generateCRscript` to create a PBS job script for cellranger cou
 -r --results_directory (optional) path to the directory where the CR outs will be saved
 -f --fastqs (required for COUNT) path to the directory with fastq files in it
 -t --transcriptome (required for COUNT) path to the directory with the 10X reference
+--multi (required for MULTI) This is a flag to generate a multi pbs file (default is count)
 -c --csv (required for MULTI) path to the CSV file required by cellranger multi
 -o --output (optional) filepath and filename for the created .pbs file (if not included, it will save as {sample_name}.pbs)
+
+example:
+
+generateCRscript -sample_name 7166-MR-1 \
+   --job_id mouse_WT \
+   --results_directory /zfs/musc3/project/cellranger_out \
+   --fastqs /zfs/musc3/project/fastqs \
+   --transcriptome /zfs/musc3/reference/mm10 \
+   --output /zfs/musc3/project/scripts/mouse_WT_count.pbs
 ```
 
 ### What's new
