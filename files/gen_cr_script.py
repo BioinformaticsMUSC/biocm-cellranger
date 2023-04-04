@@ -7,11 +7,19 @@ def main(args):
     if args.count and args.multi:
         raise RuntimeError("Please select ONE of either count (--count) or multi (--multi)")
 
-    if args.count:
+    if args.job_id:
+        job_id = args.job_id
+    else:
+        job_id = args.sample_name
 
-        #make sure output file ends with .pbs
-        if not args.output.endswith(".pbs"):
-            args.output = args.output + ".pbs"
+    if not args.output:
+        args.output = job_id + ".pbs"
+
+    # make sure output file ends with .pbs
+    if not args.output.endswith(".pbs"):
+        args.output = args.output + ".pbs"
+
+    if args.count:
 
         #fastqs required
         if not args.fastqs:
@@ -31,9 +39,6 @@ def main(args):
             outfile.write(f"#PBS -N {args.sample_name}_count\n")
             outfile.write("#PBS -l select=1:ncpus=24:mem=200gb,walltime=48:00:00\n")
             outfile.write("#PBS -m abe\n\n")
-
-
-
 
             outfile.write(f"singularity exec -B /zfs/musc3:/mnt --pwd {res_dir} /zfs/musc3/singularity_images/biocm-cellranger_latest.sif \\\n")
             outfile.write("\tcellranger count \\\n")
@@ -73,14 +78,15 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Create Anndata file from prepared Seurat directory',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('-s', '--sample_name', default=None, required=True)
+    parser.add_argument('-i', '--job_id', default=None, required=False)
     parser.add_argument("--count", action="store_true")
     parser.add_argument("--multi", action="store_true")
     parser.add_argument('-r', '--results_directory', default=None, required=False)
     parser.add_argument('-f', '--fastqs', default=None, required=False)
     parser.add_argument('-t', '--transcriptome', default=None, required=False)
-    parser.add_argument('-s', '--sample_name', default=None, required=True)
     parser.add_argument('-c', '--csv', default=None, required=False)
-    parser.add_argument('-o', '--output', default='cellranger_job.pbs')
+    parser.add_argument('-o', '--output', default=None)
 
     args = parser.parse_args()
 

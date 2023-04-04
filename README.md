@@ -1,7 +1,7 @@
 # biocm-cellranger docker container
 
 This is a dockerfile for a container to be used via Sigularity on the 
-Palmetto cluster. The container comes with Cell Ranger, Cell Ranger ATAC, and Cell Ranger ARC installed on it
+Palmetto cluster. The container comes with Cell Ranger, Cell Ranger ATAC, and Cell Ranger ARC installed on it. It also contains a script to help generate PBS batch job files.
 
 ## Example usage
 
@@ -51,6 +51,18 @@ cellranger count \
    --fastqs=/mnt/home/user.name/yard/run_cellranger_count/pbmc_1k_v3_fastqs \
    --sample=pbmc_1k_v3 \
    --transcriptome=/mnt/home/user.name/yard/run_cellranger_count/refdata-gex-GRCh38-2020-A
+```
+
+### Generate CR scripts
+Use the command `generateCRscript` to create a PBS job script for cellranger count (default) or cellranger multi. The command takes the following arguments:
+```
+-s --sample_name (required) This is the name of the sample according to the fastq file (e.g. 7166-MR-43)
+-i --job_id (optional) This is the name of the PBS job and cellranger output folder (if not included, the sample_name will be used)
+-r --results_directory (optional) path to the directory where the CR outs will be saved
+-f --fastqs (required for COUNT) path to the directory with fastq files in it
+-t --transcriptome (required for COUNT) path to the directory with the 10X reference
+-c --csv (required for MULTI) path to the CSV file required by cellranger multi
+-o --output (optional) filepath and filename for the created .pbs file (if not included, it will save as {sample_name}.pbs)
 ```
 
 ### What's new
