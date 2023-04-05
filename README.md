@@ -74,7 +74,7 @@ generateCRscript -sample_name 7166-MR-1 \
    --results_directory /zfs/musc3/project/cellranger_out \
    --fastqs /zfs/musc3/project/fastqs \
    --transcriptome /zfs/musc3/reference/mm10 \
-   --output /zfs/musc3/project/scripts/mouse_WT_count.pbs
+   --output_dir /zfs/musc3/project/scripts
 
 example for cellranger multi:
 
@@ -82,7 +82,7 @@ generateCRscript -sample_name 7166-MR-1 \
    --job_id mouse_WT_cmo \
    --results_directory /zfs/musc3/project/cellranger_out \
    --csv /zfs/musc3/project/mouse_WT.csv \
-   --output /zfs/musc3/project/scripts/mouse_WT_multi.pbs
+   --output_dir /zfs/musc3/project/scripts
 ```
 
 Note that instances of `/zfs/musc3` will be automatically replaced by `/mnt` for binding within the container. You may need to adjust other options (PBS job header, for instance) of the generated .pbs file.
