@@ -5,7 +5,7 @@ Palmetto cluster. The container comes with Cell Ranger, Cell Ranger ATAC, and Ce
 
 ## Example usage
 
-This container can be used interactively or with a batch job submission. For Cell Ranger, a batch job submission is ideal.
+This container can be used interactively or with a batch job submission. For Cell Ranger, a batch job submission is ideal. See below on how to use a script to generate a PBS file for batch job submission.
 
 
 ### Batch job use
@@ -44,7 +44,7 @@ singularity shell -B /zfs/musc3:/mnt --pwd /mnt biocm-cellranger_latest.sif
 
 Note the same options as above.
 
-Once inside the container, you can run cellbender as usual:
+Once inside the container, you can run cellranger as usual:
 ```
 cellranger count \
    --id=run_count_1kpbmcs \
@@ -53,19 +53,21 @@ cellranger count \
    --transcriptome=/mnt/home/user.name/yard/run_cellranger_count/refdata-gex-GRCh38-2020-A
 ```
 
-### Generate CR scripts
+### Generate CR scripts for batch jobs
 Use the command `generateCRscript` to create a PBS job script for cellranger count (default) or cellranger multi. The command takes the following arguments:
 ```
 -s --sample_name (required) This is the name of the sample according to the fastq file (e.g. 7166-MR-43)
+   To create multiple scripts, separate multiple samples by commas (e.g. 7166-MR-43,7166-MR-44)
 -i --job_id (optional) This is the name of the PBS job and cellranger output folder (if not included, the sample_name will be used)
--r --results_directory (optional) path to the directory where the CR outs will be saved
+   If creating multiple scripts, you can include as many job_ids as samples in a corresponding order
+-r --results_directory (optional) path to the directory where the cellranger outputs will be saved
 -f --fastqs (required for COUNT) path to the directory with fastq files in it
 -t --transcriptome (required for COUNT) path to the directory with the 10X reference
 --multi (required for MULTI) This is a flag to generate a multi pbs file (default is count)
 -c --csv (required for MULTI) path to the CSV file required by cellranger multi
--o --output (optional) filepath and filename for the created .pbs file (if not included, it will save as {sample_name}.pbs)
+-o --output_dir (optional) directory to save the completed script(s) in - the filename will be automatically created
 
-example:
+example for cellranger count:
 
 generateCRscript -sample_name 7166-MR-1 \
    --job_id mouse_WT \
@@ -73,7 +75,17 @@ generateCRscript -sample_name 7166-MR-1 \
    --fastqs /zfs/musc3/project/fastqs \
    --transcriptome /zfs/musc3/reference/mm10 \
    --output /zfs/musc3/project/scripts/mouse_WT_count.pbs
+
+example for cellranger multi:
+
+generateCRscript -sample_name 7166-MR-1 \
+   --job_id mouse_WT_cmo \
+   --results_directory /zfs/musc3/project/cellranger_out \
+   --csv /zfs/musc3/project/mouse_WT.csv \
+   --output /zfs/musc3/project/scripts/mouse_WT_multi.pbs
 ```
+
+Note that instances of `/zfs/musc3` will be automatically replaced by `/mnt` for binding within the container. You may need to adjust other options (PBS job header, for instance) of the generated .pbs file.
 
 ### What's new
 

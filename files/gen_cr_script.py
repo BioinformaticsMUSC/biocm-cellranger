@@ -1,4 +1,6 @@
 #!/opt/cellranger-7.1.0/external/anaconda/bin/python
+import os
+
 def main(args):
 
     if not args.count and not args.multi:
@@ -7,70 +9,97 @@ def main(args):
     if args.count and args.multi:
         raise RuntimeError("Please select ONE of either count (--count) or multi (--multi)")
 
+    if args.output_dir:
+        assert os.path.isdir(args.output_dir)
+
+    #parse job ids - if there isn't one, use sample_name instead
+    #even if multiple samples are given and no job id is, those samples will be assigned to the job ids
     if args.job_id:
         job_id = args.job_id
     else:
         job_id = args.sample_name
 
-    if not args.output:
-        args.output = job_id + ".pbs"
+    all_samples = [s.strip() for s in args.sample_name.split(",")]
+    all_job_ids = [j.strip() for j in job_id.split(",")]
+    if set(all_job_ids) == 1:
+        all_job_ids = [j+f"_0{i}" for i, j in enumerate(all_job_ids)]
+    jobs_and_samples = zip(all_job_ids, all_samples)
 
-    # make sure output file ends with .pbs
-    if not args.output.endswith(".pbs"):
-        args.output = args.output + ".pbs"
+    print("Creating files for:")
+    for j,s in jobs_and_samples:
+        print(f"JOB: {j} | SAMPLE: {s}")
 
     if args.count:
 
-        #fastqs required
-        if not args.fastqs:
-            raise RuntimeError("Please provide directory to fastq files (-f or --fastqs)")
+        for job, sample in zip(all_job_ids, all_samples):
 
-        #ref path required
-        if not args.transcriptome:
-            raise RuntimeError("Please provide path to 10X reference (-t or --transcriptome)")
+            # create output basename and path
+            outfile_basename = job + ".pbs"
+            if args.output_dir:
+                outfile_name = os.path.join(args.output_dir, outfile_basename)
+            else:
+                outfile_name = os.path.join(os.getcwd(), outfile_basename)
 
-        # convert filepaths if needed
-        res_dir = args.results_directory if args.results_directory else "/mnt"
-        res_dir = res_dir.replace("/zfs/musc3", "/mnt")
-        fastq_dir = args.fastqs.replace("/zfs/musc3", "/mnt")
-        ref_dir = args.transcriptome.replace("/zfs/musc3", "/mnt")
-        with open(args.output, "w") as outfile:
-            #PBS header
-            outfile.write(f"#PBS -N {args.sample_name}_count\n")
-            outfile.write("#PBS -l select=1:ncpus=24:mem=200gb,walltime=48:00:00\n")
-            outfile.write("#PBS -m abe\n\n")
+            #fastqs required
+            if not args.fastqs:
+                raise RuntimeError("Please provide directory to fastq files (-f or --fastqs)")
 
-            outfile.write(f"singularity exec -B /zfs/musc3:/mnt --pwd {res_dir} /zfs/musc3/singularity_images/biocm-cellranger_latest.sif \\\n")
-            outfile.write("\tcellranger count \\\n")
-            outfile.write(f"\t--id={args.sample_name}_count \\\n")
-            outfile.write(f"\t--transcriptome={ref_dir} \\\n")
-            outfile.write(f"\t--fastqs={fastq_dir} \\\n")
-            outfile.write("\t--localmem=150")
-        print(f"PBS script written and saved at {args.output}")
+            #ref path required
+            if not args.transcriptome:
+                raise RuntimeError("Please provide path to 10X reference (-t or --transcriptome)")
+
+            # convert filepaths if needed
+            res_dir = args.results_directory if args.results_directory else "/mnt"
+            res_dir = res_dir.replace("/zfs/musc3", "/mnt")
+            fastq_dir = args.fastqs.replace("/zfs/musc3", "/mnt")
+            ref_dir = args.transcriptome.replace("/zfs/musc3", "/mnt")
+
+            with open(outfile_name, "w") as outfile:
+
+                #PBS header
+                outfile.write(f"#PBS -N {sample}_count\n")
+                outfile.write("#PBS -l select=1:ncpus=24:mem=200gb,walltime=48:00:00\n")
+                outfile.write("#PBS -m abe\n\n")
+
+                outfile.write(f"singularity exec -B /zfs/musc3:/mnt --pwd {res_dir} /zfs/musc3/singularity_images/biocm-cellranger_latest.sif \\\n")
+                outfile.write("\tcellranger count \\\n")
+                outfile.write(f"\t--id={job} \\\n")
+                outfile.write(f"\t--transcriptome={ref_dir} \\\n")
+                outfile.write(f"\t--fastqs={fastq_dir} \\\n")
+                outfile.write("\t--localmem=150")
+            print(f"PBS script written and saved at {outfile_name}")
 
     if args.multi:
-        # convert filepaths if needed
-        res_dir = args.results_directory if args.results_directory else "/mnt"
-        res_dir = res_dir.replace("/zfs/musc3", "/mnt")
-        csv_dir = args.csv.replace("zfs/musc3", ".mnt")
+        for job, sample in zip(all_job_ids, all_samples):
 
-        if not csv_dir.endswith(".csv"):
-            csv_dir = csv_dir + ".csv"
+            # create output basename and path
+            outfile_basename = job + ".pbs"
+            if args.output_dir:
+                outfile_name = os.path.join(args.output_dir, outfile_basename)
+            else:
+                outfile_name = os.path.join(os.getcwd(), outfile_basename)
 
-        with open(args.output, "w") as outfile:
-            #PBS header
-            outfile.write(f"#PBS -N {args.sample_name}_multi\n")
-            outfile.write("#PBS -l select=1:ncpus=24:mem=200gb,walltime=48:00:00\n")
-            outfile.write("#PBS -m abe\n\n")
+            # convert filepaths if needed
+            res_dir = args.results_directory if args.results_directory else "/mnt"
+            res_dir = res_dir.replace("/zfs/musc3", "/mnt")
+            csv_dir = args.csv.replace("zfs/musc3", ".mnt")
 
-            outfile.write(f"singularity exec -B /zfs/musc3:/mnt --pwd {res_dir} /zfs/musc3/singularity_images/biocm-cellranger_latest.sif \\\n")
-            outfile.write("\tcellranger multi \\\n")
-            outfile.write(f"\t--id={args.sample_name}_count \\\n")
-            outfile.write(f"\t--csv={args.csv} \\\n")
+            if not csv_dir.endswith(".csv"):
+                csv_dir = csv_dir + ".csv"
 
-        print(f"PBS script written and saved at {args.output}")
+            with open(outfile_name, "w") as outfile:
+                #PBS header
+                outfile.write(f"#PBS -N {sample}_multi\n")
+                outfile.write("#PBS -l select=1:ncpus=24:mem=200gb,walltime=48:00:00\n")
+                outfile.write("#PBS -m abe\n\n")
 
-    pass
+                outfile.write(f"singularity exec -B /zfs/musc3:/mnt --pwd {res_dir} /zfs/musc3/singularity_images/biocm-cellranger_latest.sif \\\n")
+                outfile.write("\tcellranger multi \\\n")
+                outfile.write(f"\t--id={job} \\\n")
+                outfile.write(f"\t--csv={csv_dir} \\\n")
+
+            print(f"PBS script written and saved at {outfile_name}")
+
 if __name__ == "__main__":
 
     # setting the hyper parameters
@@ -86,7 +115,7 @@ if __name__ == "__main__":
     parser.add_argument('-f', '--fastqs', default=None, required=False)
     parser.add_argument('-t', '--transcriptome', default=None, required=False)
     parser.add_argument('-c', '--csv', default=None, required=False)
-    parser.add_argument('-o', '--output', default=None)
+    parser.add_argument('-o', '--output_dir', default=None)
 
     args = parser.parse_args()
 
