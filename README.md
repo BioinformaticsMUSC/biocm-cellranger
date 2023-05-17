@@ -1,7 +1,7 @@
 # biocm-cellranger docker container
 
 This is a dockerfile for a container to be used via Sigularity on the 
-Palmetto cluster. The container comes with Cell Ranger, Cell Ranger ATAC, and Cell Ranger ARC installed on it. It also contains a script to help generate PBS batch job files.
+Palmetto cluster. The container comes with Cell Ranger, Cell Ranger ATAC, Cell Ranger ARC, and Space Ranger installed on it. It also contains a script to help generate PBS batch job files.
 
 ## Example usage
 
@@ -88,6 +88,9 @@ generateCRscript -sample_name 7166-MR-1 \
 Note that instances of `/zfs/musc3` will be automatically replaced by `/mnt` for binding within the container. You may need to adjust other options (PBS job header, for instance) of the generated .pbs file.
 
 ### What's new
+
+5/17/23 - Version 1.0.2
+- Space Ranger version 2.0.1 added for spatial analysis
 
 2/23/23 - Version 1.0.0
 Cell Ranger versions:
